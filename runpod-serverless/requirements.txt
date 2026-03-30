@@ -1,0 +1,12 @@
+runpod
+fastapi
+uvicorn
+torch
+torchaudio
+transformers
+heartlib
+basic-pitch
+python-multipart
+python-dotenv
+passlib[bcrypt]
+pydantic

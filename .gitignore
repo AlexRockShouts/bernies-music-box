@@ -1,0 +1,24 @@
+# Go
+api-gateway/api-gateway
+api-gateway/*.exe
+api-gateway/*.test
+
+# Node
+node_modules/
+.svelte-kit/
+build/
+dist/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# OS
+.DS_Store
+Thumbs.db
