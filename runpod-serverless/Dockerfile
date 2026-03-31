@@ -29,7 +29,7 @@ RUN pip install --no-cache-dir -r requirements.txt && \
 
 # Copy application code and environment template
 COPY main.py .
-COPY .env.example .
+COPY .env .
 
 # Pre-download the main models using HF CLI as recommended
 # This reduces cold-start latency and ensures all weights are in the image

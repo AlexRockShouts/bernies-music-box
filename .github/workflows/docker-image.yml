@@ -14,6 +14,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Create .env file
+      run: |
+        cat > .env << EOF
+        NODE_ENV=production
+        AUTH_USERNAME=${{ secrets.AUTH_USERNAME }}
+        AUTH_PASSWORD=${{ secrets.AUTH_PASSWORD }}
+        EOF
+
     - name: Build the Docker image
       run: docker build . --file runpod-serverless/Dockerfile --tag music-box-runpod:latest
       
