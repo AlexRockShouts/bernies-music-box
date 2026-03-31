@@ -1,31 +1,44 @@
 # Use PyTorch with CUDA as base image
-FROM pytorch/pytorch:2.2.1-cuda12.1-cudnn8-runtime
+FROM runpod/pytorch:2.2.1-py3.10-cuda12.1.1-devel-ubuntu22.04
 
 # Set working directory
 WORKDIR /app
 
 # Update and install system dependencies
+# Added wget to help with any manual downloads if needed
 RUN apt-get update && apt-get install -y \
     git \
     ffmpeg \
+    libsndfile1 \
+    git-lfs \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first to leverage Docker cache
-COPY requirements.txt .
+RUN git lfs install
 
-# Install dependencies
+# Pre-install heavy dependencies to leverage Docker layer caching better
+# Note: large downloads may still take time
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir numpy scipy torch>=2.4 torchaudio>=2.4 transformers>=4.57.0 accelerate>=1.10.1 "huggingface-hub[hf_xet]" hf-transfer sentencepiece protobuf
 
-# Install HeartMuLa core (if not in requirements.txt or needs git clone)
-# Since it's in requirements.txt, we might not need to clone it manually,
-# but if the requirements.txt refers to a local path or we want the latest:
-RUN git clone https://github.com/HeartMuLa/heartlib.git /tmp/heartlib && \
-    pip install -e /tmp/heartlib && \
-    rm -rf /tmp/heartlib
+# Copy requirements for remaining dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --no-deps git+https://github.com/HeartMuLa/heartlib.git && \
+    pip install --no-cache-dir librosa>=0.11.0
 
-# Copy application code
+# Copy application code and environment template
 COPY main.py .
+COPY .env.example .
+
+# Pre-download the main models using HF CLI as recommended
+# This reduces cold-start latency and ensures all weights are in the image
+RUN mkdir -p ckpt && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt HeartMuLa/HeartMuLaGen && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartMuLa-oss-3B HeartMuLa/HeartMuLa-oss-3B-happy-new-year && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartCodec-oss HeartMuLa/HeartCodec-oss && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartTranscriptor-oss HeartMuLa/HeartTranscriptor-oss && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/yourmt3 mimbres/yourmt3-plus-full
 
 # Create output directory
 RUN mkdir -p output
@@ -34,4 +47,5 @@ RUN mkdir -p output
 EXPOSE 8000
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use --serverless if launched on RunPod, or default to FastAPI for local dev
+CMD ["python3", "main.py", "--serverless"]
