@@ -1,8 +1,5 @@
-IMAGE_NAME ?= music-box-runpod
-IMAGE_TAG ?= latest
-DOCKER_REGISTRY ?= docker.io/digitalfallout # Leave empty for local, or set via env e.g. docker.io/username
 
-FULL_IMAGE_NAME = $(if $(DOCKER_REGISTRY),$(DOCKER_REGISTRY)/$(IMAGE_NAME):$(IMAGE_TAG),$(IMAGE_NAME):$(IMAGE_TAG))
+FULL_IMAGE_NAME = docker.io/digitalfallout/music-box-runpod:latest
 
 .PHONY: help install lint test run run-serverless clean docker-build docker-push
 
@@ -47,8 +44,4 @@ docker-build:
 	docker build -t $(FULL_IMAGE_NAME) .
 
 docker-push:
-	@if [ -z "$(DOCKER_REGISTRY)" ]; then \
-		echo "Error: DOCKER_REGISTRY is not set. Cannot push."; \
-		exit 1; \
-	fi
 	docker push $(FULL_IMAGE_NAME)
