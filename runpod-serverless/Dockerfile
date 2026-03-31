@@ -22,18 +22,18 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copy and install project requirements
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt && \
-   pip install --no-cache-dir "huggingface_hub[cli,hf_transfer]" --root-user-action=ignore && \
-    pip install --no-cache-dir --no-deps git+https://github.com/HeartMuLa/heartlib.git && \
-    pip install --no-cache-dir librosa>=0.11.0
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip install --no-cache-dir "huggingface_hub[cli,hf_transfer]" --root-user-action=ignore \
+    && pip install --no-cache-dir --no-deps git+https://github.com/HeartMuLa/heartlib.git \
+    && pip install --no-cache-dir librosa>=0.11.0
 
-# Download all models
-RUN mkdir -p ckpt
-RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt HeartMuLa/HeartMuLaGen
-RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartMuLa-oss-3B HeartMuLa/HeartMuLa-oss-3B-happy-new-year
-RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartCodec-oss HeartMuLa/HeartCodec-oss
-RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartTranscriptor-oss HeartMuLa/HeartTranscriptor-oss
-RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/yourmt3 mimbres/yourmt3-plus-full
+# Download all models (fixed + combined into one layer for better caching and smaller image)
+RUN mkdir -p ckpt && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt HeartMuLa/HeartMuLaGen && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt/HeartMuLa-oss-3B HeartMuLa/HeartMuLa-oss-3B-happy-new-year && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt/HeartCodec-oss HeartMuLa/HeartCodec-oss && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt/HeartTranscriptor-oss HeartMuLa/HeartTranscriptor-oss && \
+    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt/yourmt3 mimbres/yourmt3-plus-full
 
 # Create output directory
 RUN mkdir -p output
