@@ -6,27 +6,33 @@ WORKDIR /app
 
 # Update and install system dependencies
 # Added wget to help with any manual downloads if needed
-RUN apt-get update && apt-get install -y \
-    git \
-    ffmpeg \
-    libsndfile1 \
-    git-lfs \
-    wget \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN git lfs install
-
 # Pre-install heavy dependencies to leverage Docker layer caching better
 # Note: large downloads may still take time
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir numpy scipy torch>=2.4 torchaudio>=2.4 transformers>=4.57.0 accelerate>=1.10.1 "huggingface-hub[hf_xet]" hf-transfer sentencepiece protobuf \
-    pip install --no-cache-dir "huggingface_hub[hf_transfer]"
+    pip install --no-cache-dir \
+        numpy \
+        scipy \
+        torch>=2.4 \
+        torchaudio>=2.4 \
+        transformers>=4.57.0 \
+        accelerate>=1.10.1 \
+        "huggingface-hub[hf_xet]" \
+        hf-transfer \
+        sentencepiece \
+        protobuf && \
+    # Install git-lfs for safety with large model files
+    apt-get update && apt-get install -y --no-install-recommends git-lfs && \
+    git lfs install && \
+    # Clean up
+    rm -rf /var/lib/apt/lists/*
 
-    # Copy requirements for remaining dependencies
+# Copy requirements for remaining dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir --no-deps git+https://github.com/HeartMuLa/heartlib.git && \
     pip install --no-cache-dir librosa>=0.11.0
+
+
 
 # Copy application code and environment template
 COPY main.py .
@@ -34,12 +40,33 @@ COPY .env .
 
 # Pre-download the main models using HF CLI as recommended
 # This reduces cold-start latency and ensures all weights are in the image
+# Download all required models (using hf_xet for speed)
 RUN mkdir -p ckpt && \
-    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt HeartMuLa/HeartMuLaGen && \
-    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartMuLa-oss-3B HeartMuLa/HeartMuLa-oss-3B-happy-new-year && \
-    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartCodec-oss HeartMuLa/HeartCodec-oss && \
-    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartTranscriptor-oss HeartMuLa/HeartTranscriptor-oss && \
-    HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/yourmt3 mimbres/yourmt3-plus-full
+    python -c '
+import os
+from huggingface_hub import snapshot_download
+
+os.makedirs("ckpt", exist_ok=True)
+
+repos = [
+    ("HeartMuLa/HeartMuLaGen", "ckpt"),
+    ("HeartMuLa/HeartMuLa-oss-3B-happy-new-year", "ckpt/HeartMuLa-oss-3B"),
+    ("HeartMuLa/HeartCodec-oss", "ckpt/HeartCodec-oss"),
+    ("HeartMuLa/HeartTranscriptor-oss", "ckpt/HeartTranscriptor-oss"),
+    ("mimbres/yourmt3-plus-full", "ckpt/yourmt3"),
+]
+
+for repo_id, local_dir in repos:
+    print(f"Downloading {repo_id} to {local_dir}...")
+    snapshot_download(
+        repo_id=repo_id,
+        local_dir=local_dir,
+        allow_patterns=["*"],
+        # Optional: force Xet if available
+        # force_download=False
+    )
+    print(f"Finished {repo_id}")
+'
 
 # Create output directory
 RUN mkdir -p output
