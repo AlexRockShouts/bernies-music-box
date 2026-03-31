@@ -23,6 +23,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy and install project requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
+   pip install --no-cache-dir "huggingface_hub[cli,hf_transfer]" --root-user-action=ignore && \
     pip install --no-cache-dir --no-deps git+https://github.com/HeartMuLa/heartlib.git && \
     pip install --no-cache-dir librosa>=0.11.0
 
