@@ -19,9 +19,10 @@ RUN git lfs install
 # Pre-install heavy dependencies to leverage Docker layer caching better
 # Note: large downloads may still take time
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir numpy scipy torch>=2.4 torchaudio>=2.4 transformers>=4.57.0 accelerate>=1.10.1 "huggingface-hub[hf_xet]" hf-transfer sentencepiece protobuf
+    pip install --no-cache-dir numpy scipy torch>=2.4 torchaudio>=2.4 transformers>=4.57.0 accelerate>=1.10.1 "huggingface-hub[hf_xet]" hf-transfer sentencepiece protobuf \
+    pip install --no-cache-dir "huggingface_hub[hf_transfer]"
 
-# Copy requirements for remaining dependencies
+    # Copy requirements for remaining dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir --no-deps git+https://github.com/HeartMuLa/heartlib.git && \
