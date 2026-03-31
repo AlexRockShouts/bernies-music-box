@@ -4,68 +4,41 @@ FROM runpod/pytorch:2.2.1-py3.10-cuda12.1.1-devel-ubuntu22.04
 # Set working directory
 WORKDIR /app
 
-# Update and install system dependencies
-# Added wget to help with any manual downloads if needed
-# Pre-install heavy dependencies to leverage Docker layer caching better
-# Note: large downloads may still take time
+# === Dependencies (your improved block from before) ===
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir \
-        numpy \
-        scipy \
-        torch>=2.4 \
-        torchaudio>=2.4 \
-        transformers>=4.57.0 \
-        accelerate>=1.10.1 \
-        "huggingface-hub[hf_xet]" \
-        hf-transfer \
-        sentencepiece \
-        protobuf && \
-    # Install git-lfs for safety with large model files
+        numpy scipy \
+        torch>=2.4 torchaudio>=2.4 \
+        transformers>=4.57.0 accelerate>=1.10.1 \
+        "huggingface-hub[hf_xet]" hf-transfer \
+        sentencepiece protobuf && \
     apt-get update && apt-get install -y --no-install-recommends git-lfs && \
     git lfs install && \
-    # Clean up
     rm -rf /var/lib/apt/lists/*
 
-# Copy requirements for remaining dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir --no-deps git+https://github.com/HeartMuLa/heartlib.git && \
     pip install --no-cache-dir librosa>=0.11.0
 
-
-
-# Copy application code and environment template
-COPY main.py .
-COPY .env .
-
-# Pre-download the main models using HF CLI as recommended
-# This reduces cold-start latency and ensures all weights are in the image
-# Download all required models (using hf_xet for speed)
+# === Model Downloads ===
 RUN mkdir -p ckpt && \
     python -c '
 import os
 from huggingface_hub import snapshot_download
-
 os.makedirs("ckpt", exist_ok=True)
-
-repos = [
+downloads = [
     ("HeartMuLa/HeartMuLaGen", "ckpt"),
     ("HeartMuLa/HeartMuLa-oss-3B-happy-new-year", "ckpt/HeartMuLa-oss-3B"),
     ("HeartMuLa/HeartCodec-oss", "ckpt/HeartCodec-oss"),
     ("HeartMuLa/HeartTranscriptor-oss", "ckpt/HeartTranscriptor-oss"),
     ("mimbres/yourmt3-plus-full", "ckpt/yourmt3"),
 ]
-
-for repo_id, local_dir in repos:
-    print(f"Downloading {repo_id} to {local_dir}...")
-    snapshot_download(
-        repo_id=repo_id,
-        local_dir=local_dir,
-        allow_patterns=["*"],
-        # Optional: force Xet if available
-        # force_download=False
-    )
-    print(f"Finished {repo_id}")
+for repo_id, local_dir in downloads:
+    print(f"Downloading {repo_id} → {local_dir}")
+    snapshot_download(repo_id=repo_id, local_dir=local_dir, allow_patterns=["*"])
+    print(f"✅ Finished {repo_id}\n")
+print("All models downloaded.")
 '
 
 # Create output directory
