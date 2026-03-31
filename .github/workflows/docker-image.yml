@@ -26,7 +26,7 @@ jobs:
           EOF
 
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag music-box-runpod:latest
+        run: docker build  --platform linux/amd64 . --file Dockerfile --tag music-box-runpod:latest
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
