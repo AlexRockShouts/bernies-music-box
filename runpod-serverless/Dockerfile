@@ -36,7 +36,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
 #    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt/HeartMuLa-oss-3B HeartMuLa/HeartMuLa-oss-3B-happy-new-year && \
 #    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt/HeartCodec-oss HeartMuLa//HeartCodec-oss-20260123 && \
 #    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt/HeartTranscriptor-oss HeartMuLa/HeartTranscriptor-oss && \
-#    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt/yourmt3 mimbres/yourmt3-plus-full
+#    HF_HUB_ENABLE_HF_TRANSFER=1 hf download --local-dir ckpt/yourmt3 mimbres/YourMT3
 
 RUN mkdir -p ckpt && \
     python - <<'EOF'
@@ -49,7 +49,7 @@ snapshot_download(repo_id="HeartMuLa/HeartMuLaGen", local_dir="ckpt")
 snapshot_download(repo_id="HeartMuLa/HeartMuLa-oss-3B-happy-new-year", local_dir="ckpt/HeartMuLa-oss-3B")
 snapshot_download(repo_id="HeartMuLa/HeartCodec-oss-20260123", local_dir="ckpt/HeartCodec-oss")
 snapshot_download(repo_id="HeartMuLa/HeartTranscriptor-oss", local_dir="ckpt/HeartTranscriptor-oss")
-snapshot_download(repo_id="mimbres/yourmt3-plus-full", local_dir="ckpt/yourmt3")
+snapshot_download(repo_id="mimbres/YourMT3", local_dir="ckpt/yourmt3")
 EOF
 
 # Create output directory
