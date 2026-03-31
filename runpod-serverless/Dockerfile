@@ -27,27 +27,12 @@ RUN pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir librosa>=0.11.0
 
 # Download all models
-RUN mkdir -p ckpt && \
-    python -c '
-import os
-from huggingface_hub import snapshot_download
-
-os.makedirs("ckpt", exist_ok=True)
-
-downloads = [
-    ("HeartMuLa/HeartMuLaGen", "ckpt"),
-    ("HeartMuLa/HeartMuLa-oss-3B-happy-new-year", "ckpt/HeartMuLa-oss-3B"),
-    ("HeartMuLa/HeartCodec-oss", "ckpt/HeartCodec-oss"),
-    ("HeartMuLa/HeartTranscriptor-oss", "ckpt/HeartTranscriptor-oss"),
-    ("mimbres/yourmt3-plus-full", "ckpt/yourmt3"),
-]
-
-for repo_id, local_dir in downloads:
-    print(f"Downloading {repo_id} → {local_dir}")
-    snapshot_download(repo_id=repo_id, local_dir=local_dir, allow_patterns=["*"])
-    print(f"✅ Finished {repo_id}")
-print("All models downloaded successfully!")
-'
+RUN mkdir -p ckpt
+RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt HeartMuLa/HeartMuLaGen
+RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartMuLa-oss-3B HeartMuLa/HeartMuLa-oss-3B-happy-new-year
+RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartCodec-oss HeartMuLa/HeartCodec-oss
+RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/HeartTranscriptor-oss HeartMuLa/HeartTranscriptor-oss
+RUN HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download --local-dir ckpt/yourmt3 mimbres/yourmt3-plus-full
 
 # Create output directory
 RUN mkdir -p output
