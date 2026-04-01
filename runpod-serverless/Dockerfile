@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 runpod/pytorch:2.2.1-py3.10-cuda12.1.1-devel-ubuntu22.04
+FROM runpod/pytorch:2.2.1-py3.10-cuda12.1.1-devel-ubuntu22.04
 
 ARG HF_TOKEN
 ENV HF_TOKEN=${HF_TOKEN}

@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/joho/godotenv"
 )
 
 type Task struct {
@@ -62,6 +63,9 @@ func (s *TaskStore) List() []*Task {
 var store = NewTaskStore()
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Printf("warning: %v", err)
+	}
 	r := gin.Default()
 
 	// CORS

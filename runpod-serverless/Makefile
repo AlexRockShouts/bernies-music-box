@@ -41,7 +41,7 @@ clean:
 	rm -rf .pytest_cache
 
 docker-build:
-	docker build -t $(FULL_IMAGE_NAME) .
+	docker buildx build --platform linux/amd64 --load -t $(FULL_IMAGE_NAME) .
 
 docker-push:
-	docker push $(FULL_IMAGE_NAME)
+	docker buildx build --platform linux/amd64 --push -t $(FULL_IMAGE_NAME) .
